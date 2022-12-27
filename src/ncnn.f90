@@ -8,13 +8,11 @@
 !>  Fortran binding for ncnn
 !
 ! REVISION HISTORY:
-! 17 Dec, 2022 - Initial Version
+! 17 Dec 2022 - Initial Version
 !------------------------------------------------------------------------------
 module ncnn
     use, intrinsic :: iso_c_binding
     implicit none
-
-    public :: ncnn_allocator_t
 
     !> ncnn_allocator_t
     type :: ncnn_allocator_t
@@ -1063,5 +1061,72 @@ function mat_get_cstep(mat) result(cstep)
 
     cstep = int(ncnn_mat_get_cstep(mat%ptr))
 end function mat_get_cstep
+
+!> void* ncnn_mat_get_data(const ncnn_mat_t mat)
+function mat_get_data(mat) result(data)
+    implicit none
+    type(ncnn_mat_t), intent(in) :: mat
+    real(4), allocatable         :: data(:)
+    real(4), pointer             :: data_pointer(:)
+    integer                      :: data_size
+    integer                      :: i
+
+    interface
+        type(c_ptr) function ncnn_mat_get_data(mat_ptr) bind(c)
+            import c_ptr
+            implicit none
+            type(c_ptr), value :: mat_ptr 
+        end function ncnn_mat_get_data
+    end interface
+
+    data_size = 1
+    data_size = data_size * mat_get_w(mat)
+    data_size = data_size * mat_get_h(mat)
+    data_size = data_size * mat_get_d(mat)
+    data_size = data_size * mat_get_c(mat)
+
+    allocate(data(data_size))
+
+    call c_f_pointer(ncnn_mat_get_data(mat%ptr), data_pointer, (/data_size/))
+
+    do i = 1, data_size
+        data(i) = data_pointer(i)
+    end do
+
+end function mat_get_data
+
+!> void* ncnn_mat_get_channel_data(const ncnn_mat_t mat, int c)
+function mat_get_channel_data(mat, c) result(data)
+    implicit none
+    type(ncnn_mat_t), intent(in) :: mat
+    integer, intent(in)          :: c
+    real(4), allocatable         :: data(:)
+    real(4), pointer             :: data_pointer(:)
+    integer                      :: data_size
+    integer                      :: i
+
+    interface
+        type(c_ptr) function ncnn_mat_get_channel_data(mat_ptr, c) bind(c)
+            import c_ptr, c_int
+            implicit none
+            type(c_ptr), value    :: mat_ptr
+            integer(c_int), value :: c
+        end function ncnn_mat_get_channel_data
+    end interface
+
+    data_size = 1
+    data_size = data_size * mat_get_w(mat)
+    data_size = data_size * mat_get_h(mat)
+    data_size = data_size * mat_get_d(mat)
+
+    allocate(data(data_size))
+
+    call c_f_pointer(ncnn_mat_get_channel_data(mat%ptr, c - 1), data_pointer, (/data_size/))
+
+    do i = 1, data_size
+        data(i) = data_pointer(i)
+    end do
+
+end function mat_get_channel_data
 
 end module ncnn
