@@ -5,7 +5,7 @@ project(forncnn)
 
 # fortran
 enable_language(Fortran)
-set(CMAKE_Fortran_FLAGS "-g -fcheck=all -Wall -fbacktrace")
+#set(CMAKE_Fortran_FLAGS)
 
 # c++
 set(CMAKE_CXX_FLAGS "-lstdc++")
@@ -23,6 +23,7 @@ endif()
 
 file(GLOB SRC_FILES
     ${PROJECT_SOURCE_DIR}/src/*.f90
+    ${PROJECT_SOURCE_DIR}/src/pretty_print.c
 )
 
 # include ncnn headers

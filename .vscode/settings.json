@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "*.plist": "plist",
+        "queue": "cpp",
+        "stack": "cpp",
+        "random": "cpp",
+        "pretty_print.h": "c"
+    }
+}
