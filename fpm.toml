@@ -1,0 +1,15 @@
+name = "forncnn"
+version = ""
+license = "BSD 2-Clause \"Simplified\" License"
+author = "mizu-bai"
+maintainer = "mizu-bai"
+copyright = "Copyright (c) 2023, mizu-bai"
+description = "Experimental Fortran binding for ncnn"
+keywords = ["ncnn", "deep-learning", "neural-network"]
+homepage = "https://github.com/mizu-bai/forncnn"
+
+[build]
+link = "ncnn"
+
+[library]
+source-dir = "src"

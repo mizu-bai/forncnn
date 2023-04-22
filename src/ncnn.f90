@@ -1109,7 +1109,7 @@ function mat_get_channel_data(mat, c) result(data)
         type(c_ptr) function ncnn_mat_get_channel_data(mat_ptr, c) bind(c)
             import c_ptr, c_int
             implicit none
-            type(c_ptr), value    :: mat_ptr
+            type(c_ptr)   , value :: mat_ptr
             integer(c_int), value :: c
         end function ncnn_mat_get_channel_data
     end interface
@@ -1128,5 +1128,86 @@ function mat_get_channel_data(mat, c) result(data)
     end do
 
 end function mat_get_channel_data
+
+! No such type `unsigned char` in fortran, so NCNN_PIXEL will be ignored
+
+!> void ncnn_mat_substract_mean_normalize(ncnn_mat_t mat, const float* mean_vals, const float* norm_vals)
+subroutine mat_substract_mean_normalize(mat, mean_vals, norm_vals)
+    implicit none
+    type(ncnn_mat_t), intent(inout) :: mat
+    real(4)         , intent(in)    :: mean_vals(:)
+    real(4)         , intent(in)    :: norm_vals(:)
+
+    interface
+        subroutine ncnn_mat_substract_mean_normalize(mat_ptr, mean_vals, norm_vals) bind(c)
+            import c_float, c_ptr
+            implicit none
+            type(c_ptr), value :: mat_ptr
+            real(c_float)      :: mean_vals(:)
+            real(c_float)      :: norm_vals(:)
+        end subroutine ncnn_mat_substract_mean_normalize
+    end interface
+
+    call ncnn_mat_substract_mean_normalize(mat%ptr, mean_vals, norm_vals)
+end subroutine mat_substract_mean_normalize
+
+!> void ncnn_convert_packing(const ncnn_mat_t src, ncnn_mat_t* dst, int elempack, const ncnn_option_t opt)
+subroutine convert_packing(src, dst, elempack, opt)
+    implicit none
+    
+    type(ncnn_mat_t), intent(in)    :: src
+    type(ncnn_mat_t), intent(inout) :: dst
+    integer, intent(in)             :: elempack
+    type(ncnn_option_t), intent(in) :: opt
+
+    interface
+        subroutine ncnn_convert_packing(src_ptr, dst_ptr, elempack, opt_ptr) bind(c)
+            import c_ptr, c_int
+            implicit none
+            type(c_ptr), value :: src_ptr
+            type(c_ptr)        :: dst_ptr
+            integer(c_int)     :: elempack
+            type(c_ptr), value :: opt_ptr
+        end subroutine ncnn_convert_packing
+    end interface
+
+    call ncnn_convert_packing(src%ptr, dst%ptr, elempack, opt%ptr)
+
+end subroutine convert_packing
+
+!> void ncnn_flatten(const ncnn_mat_t src, ncnn_mat_t* dst, const ncnn_option_t opt)
+subroutine flatten(src, dst, opt)
+    implicit none
+
+    type(ncnn_mat_t), intent(in)    :: src
+    type(ncnn_mat_t), intent(inout) :: dst
+    type(ncnn_option_t), intent(in) :: opt
+
+    interface
+        subroutine ncnn_flatten(src_ptr, dst_ptr, opt_ptr)
+            import c_ptr
+            type(c_ptr), value :: src_ptr
+            type(c_ptr)        :: dst_ptr
+            type(c_ptr), value :: opt_ptr
+        end subroutine ncnn_flatten
+    end interface
+
+    call ncnn_flatten(src%ptr, dst%ptr, opt%ptr)
+    
+end subroutine flatten
+
+!> blob api
+
+!> paramdict api
+
+!> datareader api
+
+!> modelbin api
+
+!> layer api
+
+!> net api
+
+!> extractor api
 
 end module ncnn
