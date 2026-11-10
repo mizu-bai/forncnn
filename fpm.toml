@@ -1,15 +1,29 @@
 name = "forncnn"
-version = ""
-license = "BSD 2-Clause \"Simplified\" License"
+version = "0.1.0"
+license = "BSD-3-Clause"
 author = "mizu-bai"
 maintainer = "mizu-bai"
 copyright = "Copyright (c) 2023, mizu-bai"
-description = "Experimental Fortran binding for ncnn"
-keywords = ["ncnn", "deep-learning", "neural-network"]
+description = "Fortran binding for the ncnn C API"
+keywords = ["ncnn", "deep-learning", "neural-network", "inference"]
+categories = ["neural-networks"]
 homepage = "https://github.com/mizu-bai/forncnn"
 
 [build]
 link = "ncnn"
+# ncnn compiled with clang also needs libc++, and the default CMake build
+# enables OpenMP, which needs libomp on macOS. When ncnn is not in a standard
+# library location, point fpm at it:
+#   export FPM_LDFLAGS="-L/path/to/ncnn/build/src -lc++ -lomp"
+# or pass --link-flag repeatedly. See README.
 
 [library]
 source-dir = "src"
+
+[[example]]
+name = "squeezenet"
+source-dir = "examples/squeezenet"
+main = "main.f90"
+
+[install]
+library = false
