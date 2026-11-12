@@ -25,4 +25,5 @@ module ncnn
     use ncnn_layer
     use ncnn_net
     use ncnn_extractor
+    implicit none
 end module ncnn

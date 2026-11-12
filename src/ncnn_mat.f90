@@ -610,10 +610,13 @@ contains
     ! create external -- elemsize is fixed at 4 (float32), so the Fortran side
     ! can take a real(c_float) array directly.
     !
-    ! WARNING: the returned Mat does NOT own data. data must be a contiguous
-    ! array whose lifetime covers the Mat's, and it must not be a non-contiguous
-    ! section -- the compiler would silently copy it and ncnn would be left with
-    ! a dangling pointer.
+    ! WARNING: the returned Mat does NOT own data. data must be a named,
+    ! contiguous array variable whose lifetime covers the Mat's. Two ways to
+    ! get a dangling pointer:
+    !   - a non-contiguous section such as a(1:100:2) -- the compiler silently
+    !     materialises a temporary and ncnn keeps the temporary's address
+    !   - an expression such as reshape(...) or a(*) + 1 -- the temporary dies
+    !     at the end of the statement, so the Mat is dangling immediately
     !--------------------------------------------------------------------------
 
     !> ncnn_mat_t ncnn_mat_create_external_1d(int w, void* data, ncnn_allocator_t allocator)
@@ -1057,11 +1060,18 @@ contains
     end function mat_get_batch_data
 
     !> void ncnn_mat_substract_mean_normalize(ncnn_mat_t mat, const float* mean_vals, const float* norm_vals)
-    !> mean_vals and norm_vals must each have at least mat_get_c(mat) elements.
+    !> mean_vals and norm_vals must each have at least mat_get_c(mat) elements;
+    !> the C side takes a bare pointer and reads c values from each, so a short
+    !> array is an out-of-bounds read rather than an error.
     subroutine mat_substract_mean_normalize(mat, mean_vals, norm_vals)
         type(ncnn_mat_t), intent(inout) :: mat
         real(c_float), intent(in)     :: mean_vals(:)
         real(c_float), intent(in)     :: norm_vals(:)
+
+        if (size(mean_vals) < mat_get_c(mat) .or. size(norm_vals) < mat_get_c(mat)) then
+            error stop 'ncnn: mat_substract_mean_normalize needs at least ' // &
+                       'mat_get_c(mat) elements in mean_vals and norm_vals'
+        end if
 
         call ncnn_mat_substract_mean_normalize(mat%ptr, mean_vals, norm_vals)
     end subroutine mat_substract_mean_normalize

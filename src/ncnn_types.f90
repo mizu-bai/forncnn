@@ -97,10 +97,17 @@ contains
         ! terminating NUL are ever touched
         call c_f_pointer(cp, chars, [huge(0)])
 
+        ! ncnn's strings are names, paths and the version -- all far below a
+        ! megabyte. The cap exists so a missing terminator costs a wrong answer
+        ! instead of walking off into unmapped memory.
         n = 0
         do
             if (chars(n + 1) == c_null_char) exit
             n = n + 1
+            if (n >= 1048576) then
+                n = 0
+                exit
+            end if
         end do
 
         allocate (character(len=n) :: s)

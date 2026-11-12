@@ -124,11 +124,19 @@ every Mat before destroying the allocator it came from.
 Two further lifetime rules that the C API leaves implicit:
 
 - `mat_create_external_*` wraps your buffer instead of copying it. The buffer
-  must be contiguous and must outlive the Mat, and it must not be a
-  non-contiguous section — the compiler would silently copy it and ncnn would
-  be left with a dangling pointer.
+  must be a named, contiguous array variable that outlives the Mat. Two easy
+  ways to dangle it: pass a non-contiguous section such as `a(1:100:2)` (the
+  compiler materialises a temporary), or pass an expression such as
+  `reshape(...)` (the temporary dies at the end of the statement). Both leave
+  ncnn holding an address that is no longer valid.
 - `mat_reshape_*` returns a Mat that shares storage with its source. Both must
   be destroyed.
+- `extractor_extract` / `extractor_extract_index` set the result handle even
+  when they fail — the C side allocates a Mat unconditionally, so a failed
+  extract hands back an empty Mat rather than a null. Destroy it either way.
+- `net_get_option` returns a handle onto the net's own option, not a copy.
+  Mutating it is a legitimate way to reconfigure the net, but destroying it
+  frees memory the net still uses.
 
 ## Index conventions
 
@@ -149,6 +157,26 @@ element type.
 Sizes are computed from `cstep * c`, which is what ncnn's `Mat::total()` uses.
 Note that `cstep` is padded for alignment, so a 4x3 fp32 Mat reports 12
 elements while a 4x3 fp16 Mat reports 32 bytes, not 24.
+
+Two things make `elemsize == 4` harder to satisfy than it looks:
+
+- **ncnn's default option enables fp16 storage.** `option_create()` gives an
+  option with `use_fp16_storage`, `use_fp16_packed` and `use_fp16_arithmetic`
+  all set, so on an fp16-capable ARM machine intermediate blobs are fp16.
+  Whether the blob you extract is fp32 depends on the model's last layer —
+  squeezenet's Softmax output is fp32, but a model ending in an
+  fp16-friendly layer will hand you `elemsize == 2`. Turn those flags off if
+  you want fp32 throughout.
+- **A packed Mat reports `elemsize == 4 * elempack`.** An fp32 Mat with
+  `elempack == 4` reports `elemsize == 16`, so the float accessors reject it
+  too. That is deliberate — `cstep * c` counts packed elements, so reading it
+  as plain floats would return a quarter of the data.
+
+`blob_get_shape` never fills `ncnn_shape%d`: the C API simply has no argument
+for depth, so `d` is 0 even for a 4-D blob.
+
+`mat_substract_mean_normalize` reads `mat_get_c(mat)` values from each array
+and checks the lengths, since the C side takes a bare pointer with no count.
 
 ## Coverage
 

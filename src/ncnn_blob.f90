@@ -72,6 +72,9 @@ contains
 
     !> void ncnn_blob_get_shape(const ncnn_blob_t blob, int* dims, int* w, int* h, int* c)
     !> Replaces the C API's four int* out-parameters with a shape result.
+    !>
+    !> The C API has no parameter for the depth dimension, so shape%d is
+    !> always 0 here even for a 4-D blob; only dims/w/h/c are available.
     function blob_get_shape(blob) result(shape)
         type(ncnn_blob_t), intent(in) :: blob
         type(ncnn_shape)              :: shape

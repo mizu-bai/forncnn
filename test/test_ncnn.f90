@@ -324,7 +324,7 @@ contains
         type(ncnn_option_t)           :: opt
         type(ncnn_allocator_t)        :: alloc
         type(ncnn_extractor_t)        :: ex
-        type(ncnn_mat_t)              :: in, out
+        type(ncnn_mat_t)              :: in, out, fail_out
         real(c_float), allocatable    :: d(:)
         real(c_float)                 :: mv(3), nv(3)
         logical                       :: have_model
@@ -390,6 +390,15 @@ contains
         print *, '        argmax = ', best, ' prob = ', d(best)
         ! a uniform grey input has no confident winner
         call check(d(best) < 0.5_c_float, 'grey input gives a low-confidence argmax')
+
+        ! the C side allocates a Mat even when extraction fails, so the
+        ! handle must be destroyed either way -- asserting it here pins the
+        ! documented behaviour
+        call extractor_extract(ex, 'no_such_blob', fail_out, stat)
+        call check(stat /= 0, 'extracting a missing blob fails')
+        call check(c_associated(fail_out%ptr), &
+                   'failed extract still returns a handle (must be destroyed)')
+        call mat_destroy(fail_out)
 
         call mat_destroy(out)
         call mat_destroy(in)

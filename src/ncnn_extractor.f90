@@ -110,7 +110,11 @@ contains
     end function extractor_input
 
     !> int ncnn_extractor_extract(ncnn_extractor_t ex, const char* name, ncnn_mat_t* mat)
-    !> stat is 0 on success. mat%ptr is left null when extraction fails.
+    !> stat is 0 on success.
+    !>
+    !> The C side allocates a new Mat unconditionally, so mat%ptr is set even
+    !> when the extraction fails -- it then wraps an empty Mat rather than
+    !> being null. Destroy it either way, or it leaks.
     subroutine extractor_extract(ex, name, mat, stat)
         type(ncnn_extractor_t), intent(in)  :: ex
         character(len=*), intent(in)        :: name
@@ -135,6 +139,8 @@ contains
 
     !> int ncnn_extractor_extract_index(ncnn_extractor_t ex, int index, ncnn_mat_t* mat)
     !> index is the 0-based blob index, as in C.
+    !> As with extractor_extract, mat is set even on failure and must be
+    !> destroyed either way.
     subroutine extractor_extract_index(ex, index, mat, stat)
         type(ncnn_extractor_t), intent(in)  :: ex
         integer, intent(in)                 :: index
